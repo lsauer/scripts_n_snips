@@ -1,0 +1,10 @@
+author: lo sauer, 2000
+license: LGPL
+purpose: core-extension for computationally expensive functions as part of the CXP-content management system
+
+Simple cpp module for PHP
+--------------------------------------------------------------------------------
+
+* Compile the model with the corresponding header files in the php package
+* Use the dl() function to load it. See the PHP documentation for more information,
+
