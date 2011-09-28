@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="initial-scale=0.9, user-scalable=no" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<meta name="author" content="lo sauer" />
+		<title>Geocoder example: Adresses2GPScoords by lo sauer</title>
+		<style type="text/css" >
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			#map_canvas {
+				height: 100%;
+			}
+		</style>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<script type="text/javascript" src="res/js/jquery_eachasync.js"></script>
+		<script type="text/javascript">
+		/* 
+		author: lsauer, 2011
+		reads in an JSON file with addresses and looks up the formatted address and GPS (lat/long) coordinates:
+      see also: http://stackoverflow.com/questions/5191325/how-to-call-google-map-geocode-service-with-jquery-ajax
+      based on google's code example: http://code.google.com/intl/nl-NL/apis/maps/documentation/javascript/services.html#Geocoding
+      
+    Once finished you get the result as output to the console via JSON.stringify(_datapos);
+		*/
+			
+    /*-------------script logic---------------*/
+    var geo_results = {}, init_coords = {lat:48.05, long:13.05};
+    var _data, _datapos = [], _addr2pos;
+    function initialize() {
+      /*set layout of your JSON data structure here*/
+      var jdata_file = 'mydata.json';
+      var jdata_name = 'aaData';
+      var bool_showmap = true; //whether a map should be shown, or you only want to run the core JS functionality
+      
+      var _latlng = new google.maps.LatLng(init_coords.lat, init_coords.long);
+      var el_mapcanvas = document.getElementById("map_canvas");
+      var myOptions = {
+        zoom : 8,   //zoom level 0:world, 15+: street level
+        center : _latlng,
+        mapTypeId : google.maps.MapTypeId.ROADMAP 
+        /*Object 'MapTypeId':
+            HYBRID: "hybrid"
+            ROADMAP: "roadmap"
+            SATELLITE: "satellite"
+            TERRAIN: "terrain"
+        */
+      };
+      if(bool_showmap === true) {
+        var map = new google.maps.Map(el_mapcanvas, myOptions);
+      }
+      jQuery.getJSON(jdata_file, function(data) { 
+        var items = [];
+        window._data = data[jdata_name];
+        var geocoder = new google.maps.Geocoder();
+        jQuery.eachAsync(data[jdata_name], {
+          delay : 10000, //msec interval i.e. how hard the server should be hammered
+          bulk : 0,
+          loop : function(key, val) {
+            var address = val.slice(3,2).join(' ') + '; ' + val.slice(5,2).join(' '); //in this case each entry is an Array with val[3:4] containing the street, and val[5:6] the city and zip code
+            var pinname = val.slice(0,3).join(' ') + '\n' + address;  //name of the pushpin on the map
+            geocoder.geocode(
+              {'address' : address }, 
+              function(results, status) {
+                if(status == google.maps.GeocoderStatus.OK) {
+                //console.log(results, results[0].formatted_address , JSON.stringify(val) );
+                var _arr = new Array(val[0],val[1],val[2]);
+                  _arr = _arr.concat(results[0].formatted_address.split(', '),results[0].geometry.location)
+                  _datapos.push(_arr);
+                  if(bool_showmap === true) {
+                    var marker = new google.maps.Marker({
+                      map : map,
+                      position : results[0].geometry.location,
+                      title : pinname
+                    });
+                  }
+                }else { console.warn("Geocoder request failed:", status); }
+              }
+            );//end: geocoder.geocode
+          },
+          end: function(){ console.log( JSON.stringify(_datapos) ); }
+        });
+      });
+    }
+    /*
+    geocoder.geocode({
+      'address' : 'Wienerbergstrasse 16; 1120 Wien'
+    }, function(results, status) {
+      if(status == google.maps.GeocoderStatus.OK) {
+      console.log(results, status)
+      geo_results[results[0].formatted_address] = results[0].geometry.location;
+      }
+    });
+    */
+		</script>
+	</head>
+	<body onload="initialize()">
+		<div id="map_canvas"></div>
+	</body>
+</html>
