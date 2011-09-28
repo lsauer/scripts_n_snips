@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="initial-scale=0.9, user-scalable=no" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<meta name="author" content="lo sauer" />
+		<title>Geocoder example: Adresses2GPScoords by lo sauer</title>
+		<style type="text/css" >
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			#map_canvas {
+				height: 100%;
+			}
+		</style>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<script type="text/javascript" src="res/js/jquery_eachasync.js"></script>
+		<script type="text/javascript">
+		/* 
+		author: lo sauer, 2011
+		license: mit license; graphics: CC-BY-SA; heatmap: public domain (psd files on github)
+		description: reads in an JSON file with resolved geo-coordinates and plots them to a google map:
+      see also: http://code.google.com/apis/maps/documentation/javascript/overlays.html
+	*/
+			
+    /*-------------script logic---------------*/
+    if(Array.prototype.sum === undefined)
+      Array.prototype.sum = function(){
+        for(var i=0,sum=0;i<this.length;sum+=this[i++]);
+        return sum;
+      }
+    var geo_results = {}, init_coords = {lat:48.05, long:13.05};
+    var _data, _datapos = [], _addr2pos;
+    //var     agedist = [0,0,0,0,0,0,0,0,0,0,0]
+    function initialize() {
+      /*set layout of your JSON data structure here*/
+      var jdata_file = 'res/data/autpol_anon.json';
+      var jdata_name = 'autpolanon';
+      var bool_showmap = true; //whether a map should be shown, or you only want to run the core JS functionality
+      //whether a heatmap should be shown instead of mere distribution
+      if(window.location.search.toLowerCase().trim().substring(1) === 'heatmap')
+        var bool_heatmap = true;
+      else 
+        var bool_heatmap = false;
+      var spot_color = ['', 'b','g','y','a','r','r','r','r','r'];
+      if(bool_heatmap === false){
+        var iconfile = ['res/ico/Police-car-16_ahasoftteama.png'];
+      }else{
+        var iconfile = spot_color.map( function(o){return 'res/ico/spot_'+o+'.png';} );
+      }
+      
+       // gmaps styles obj
+      var gloomyMapStyles = [
+        {featureType: "all",elementType: "all",stylers: [ { visibility: "simplified" },{saturation: -90}]}, 
+        {featureType: "all",elementType: "geometry",stylers: [{gamma: 2.81}, ]}, 
+        {featureType: "poi.park",stylers: [{ hue: "#ff0010" },{ saturation: 40 }]},
+        {featureType: "landscape",elementType: "geometry",stylers: [{lightness: 57}]}
+      ];
+
+      var _latlng = new google.maps.LatLng(init_coords.lat, init_coords.long);
+      var el_mapcanvas = document.getElementById("map_canvas");
+      var mapOptions = 
+        {
+          zoom : 8,   //zoom level 0:world, 15+: street level
+          center : _latlng,
+          mapTypeControlOptions: {
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'police_Anonaut'],
+          },
+          /*Object 'MapTypeId':
+              HYBRID: "hybrid"
+              ROADMAP: "roadmap"
+              SATELLITE: "satellite"
+              TERRAIN: "terrain"
+          */
+          tilt : 45,
+          rotateControl:true
+        };
+      if(bool_showmap === true) {
+          var map = new google.maps.Map(el_mapcanvas, mapOptions);
+          var styledMapOptions = {
+              map: map,
+              name: "AT-police distribution"
+          }
+          //Associate the styled map with the MapTypeId and display it
+          map.mapTypes.set(
+              'police_Anonaut', 
+              // Create a new StyledMapType object, containing the styles and map-name to be displayed
+              new google.maps.StyledMapType(gloomyMapStyles, styledMapOptions )
+          );
+              map.setMapTypeId('police_Anonaut')
+      }
+      jQuery.getJSON(
+        jdata_file, 
+        function(data) 
+        {
+          jQuery.each(data[jdata_name], function(key, val){
+              if(bool_showmap === true) {
+              var yearnow = Date().toString().split(' ')[3]; //JS parses to Numeric type automatically when applying +,- <num>
+              if(bool_heatmap == true)
+                var agedecade = (yearnow - val[1]).toString()[0];
+              else
+                var agedecade = 0;
+              var latlng = new google.maps.LatLng(val[2].Ja, val[2].Ka);
+              //console.log(agedecade);
+              //agedist[agedecade]++;
+                var marker = new google.maps.Marker({
+                  map : map,
+                  position : latlng,
+                  title : val.slice(0,2).join(' - '),
+                  icon : iconfile[agedecade]
+                }); 
+              }
+          });
+      });
+    }
+    /*
+    geocoder.geocode({
+      'address' : 'Wienerbergstrasse 16; 1120 Wien'
+    }, function(results, status) {
+      if(status == google.maps.GeocoderStatus.OK) {
+      console.log(results, status)
+      geo_results[results[0].formatted_address] = results[0].geometry.location;
+      }
+    });
+    */
+		</script>
+	</head>
+	<body onload="initialize()">
+		<div id="map_canvas"></div>
+	</body>
+</html>
