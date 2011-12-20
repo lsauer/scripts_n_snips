@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head><title>simple WebGl example</title></head>
+<body>
+<script type="text/javascript">
+//author: lo sauer, 2011 - lsauer.com
+//license: BSD license
+//gl context; vertex shader, fragment shader
+function shaderProgram(gl, vs, fs) {
+	var prog = gl.createProgram();
+	addshader(gl, prog, 'vertex', vs);
+	addshader(gl, prog, 'fragment', fs);
+	gl.linkProgram(prog);
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Shader linkage failed!";
+	}
+	return prog;
+}
+var addshader = function(gl, prog, type, source) {
+  var sh = gl.createShader((type == 'vertex') ?
+    gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+  gl.shaderSource(sh, source);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    throw "Shader not compiled"+type+ "\n shader:\n "+gl.getShaderInfoLog(sh);
+  }
+  gl.attachShader(prog, sh);
+};
+
+function render() {
+	try {
+		var gl = document.getElementById("cxgl")
+			.getContext("experimental-webgl"); //titles are fixed
+		if (!gl) { throw "couldn't init context"; }
+	} catch (err) {
+		throw "Your web browser does not support WebGL!";
+	}
+	gl.clearColor(0.5, 0.5, 0.5, 1); //RGBA
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	var prog = shaderProgram(gl,
+		"attribute vec3 pos; void main() { gl_Position = vec4(pos, 2.0); }",
+		 "void main() {	 gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);}"
+	);
+	gl.useProgram(prog);
+  
+  //create the triangle
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+	//positions of the four edges
+	var rpos = (Math.random()*100|0)%2;
+	var rpos2 = (Math.random()*10|0)%2;
+	//matrix for the Vertexes of the geometric primitive
+	var plane =  new Float32Array([
+      rpos, 0, rpos2,
+      0, rpos, 0,
+      1, 1, rpos,
+      rpos2, 0, 0
+    ]);
+	gl.bufferData(gl.ARRAY_BUFFER,plane,gl.STATIC_DRAW);
+	var attr = gl.getAttribLocation(prog, "pos");
+	gl.enableVertexAttribArray(attr);
+	gl.vertexAttribPointer(attr, 3, gl.FLOAT, false, 0, 0);
+
+  //render to context
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function init() {
+	try { render();
+	} catch(e) { alert("Error: "+e); 
+	}
+}
+//avoid onload-browser inconsistencies
+setTimeout(init, 100);
+for(var i=0; i<10; i++){setTimeout(init, 5000);}
+
+</script>
+<canvas id="cxgl" width="400" height="400"></canvas><br>
+<button onClick="render()">click to change shape</button>
+</body>
+</html>
