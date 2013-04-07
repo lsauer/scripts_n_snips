@@ -16,7 +16,6 @@ def main():
     import urllib
     import os
     import workerpool
-    import urllib
 
     # Make a pool,with n workers
     pool = workerpool.WorkerPool(size=2)
