@@ -2,13 +2,12 @@
 # Name:        Ripcage
 # Purpose:     Multithreaded ripping of web-resources e.g. KEGG mol files for conversion to Inchis
 #
-# Author:      Lo Sauer, based on workerpool: http://code.google.com/p/workerpool/downloads/list
+# Author:      Lo Sauer
 # Note:        Please read the fair use policy (http://en.wikipedia.org/wiki/Fair_use) 
 #              and consider whether it applies to your instance of resource ripping.
-#              I will have no part if society falls apart because of this script
+#              Script uses 'workerpool': http://code.google.com/p/workerpool/downloads/list
 #
 # Created:     12.09.2011
-# Copyright:   (c) Lorenz Sauer 2011
 # Licence:     none, public domain
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
@@ -17,7 +16,6 @@ def main():
     import urllib
     import os
     import workerpool
-    import urllib
 
     # Make a pool,with n workers
     pool = workerpool.WorkerPool(size=2)
