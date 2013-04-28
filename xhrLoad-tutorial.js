@@ -51,3 +51,4 @@ function xhrLoad(){
 	};
 	xhr.send(null); //send headers only, to actually initiate the request
 }
+//xhr.setRequestHeader('Access-Control-Allow-Origin', '*'); bypass XSS
